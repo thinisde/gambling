@@ -9,5 +9,5 @@ type User struct {
 	Password    string
 	Balance     float64
 	CreatedAt   time.Time
-	UPdatedAt   time.Time
+	UpdatedAt   time.Time
 }

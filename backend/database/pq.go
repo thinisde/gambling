@@ -10,11 +10,11 @@ import (
 var PostgresDriver = &pqDriver{}
 
 func CreateDnsPostgres() string {
-	host := os.Getenv("POSTGRES_HOST")
-	port := os.Getenv("POSTGRES_PORT")
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DBNAME")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
 
 	dsn := "host=" + host + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
 	return dsn
@@ -48,7 +48,7 @@ func (d *pqDriver) Migrate() error {
 	db := d.GetDB()
 
 	// read all migration script from ./scripts/create_table.sql
-	script, err := os.ReadFile("./scripts/create_table.sql")
+	script, err := os.ReadFile("./database/scripts/create_table.sql")
 	if err != nil {
 		return err
 	}

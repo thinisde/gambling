@@ -2,10 +2,13 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"backend/database/repo"
 	"backend/lib"
+
+	"github.com/gorilla/mux"
 )
 
 type loginReq struct {
@@ -13,13 +16,19 @@ type loginReq struct {
 	Password string `json:"password"`
 }
 
-type registerHandler struct {
+type registerReq struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"display_name"`
 	Password    string `json:"password"`
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func CreateAuthHandler(r *mux.Router) {
+	authR := r.PathPrefix("/auth").Subrouter()
+	authR.HandleFunc("/login", loginHandler).Methods("POST")
+	authR.HandleFunc("/register", registerHandler).Methods("POST")
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -47,12 +56,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = SetTokenCookie(w, token)
+	if err != nil {
+		http.Error(w, "Failed to set cookie", http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	var req registerHandler
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	var req registerReq
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -68,12 +84,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := signJWT(userID)
-	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(map[string]int64{"user_id": userID})
 }

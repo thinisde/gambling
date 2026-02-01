@@ -8,7 +8,9 @@ import (
 
 	"backend/database"
 	"backend/database/repo"
+
 	"backend/handlers/auth"
+	"backend/handlers/users"
 )
 
 func init() {
@@ -27,17 +29,10 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Run Migrations
-	if err := database.PostgresDriver.Migrate(); err != nil {
-		panic("Failed to run migrations: " + err.Error())
-	}
-
 	repo.Users = *repo.NewUserRepo(db)
 
-	// Auth routes
-	authR := r.PathPrefix("/auth").Subrouter()
-	authR.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-	authR.HandleFunc("/register", auth.RegisterHandler).Methods("POST")
+	auth.CreateAuthHandler(r)
+	users.CreateUsersHandler(r)
 
 	http.ListenAndServe(":3000", r)
 }
