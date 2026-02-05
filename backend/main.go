@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 
+	"backend/cache"
 	"backend/database"
 	"backend/database/repo"
 
@@ -30,6 +31,7 @@ func main() {
 	r := mux.NewRouter()
 
 	repo.Users = *repo.NewUserRepo(db)
+	cache.CacheClient = cache.NewRedisClient()
 
 	auth.CreateAuthHandler(r)
 	users.CreateUsersHandler(r)

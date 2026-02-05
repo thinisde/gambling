@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"sync"
 
 	ws "github.com/gorilla/websocket"
@@ -82,7 +83,8 @@ func (room *WebSocketRoom) RemoveMember(userID int64) {
 	delete(room.members, userID)
 }
 
-func (room *WebSocketRoom) Broadcast(message []byte) {
+// Broadcast json message to all members
+func (room *WebSocketRoom) Broadcast(event SystemEvent, message any) {
 	// snapshot connections under read lock, then write without holding the room lock
 	room.mu.RLock()
 	conns := make([]*memberConn, 0, len(room.members))
@@ -93,7 +95,14 @@ func (room *WebSocketRoom) Broadcast(message []byte) {
 
 	for _, mc := range conns {
 		mc.mu.Lock()
-		_ = mc.conn.WriteMessage(ws.TextMessage, message)
+		err := mc.conn.WriteJSON(map[string]any{
+			"event_type": event,
+			"data":       message,
+		})
+		if err != nil {
+			// handle error (e.g., log it, remove member, etc.)
+			fmt.Println("Error broadcasting to member:", err)
+		}
 		mc.mu.Unlock()
 	}
 }
